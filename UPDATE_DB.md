@@ -22,6 +22,14 @@ A bundle of command-line tools for managing SQLite database files, including :
 
 - #### sqlite> INSERT INTO profiles_profile SELECT * FROM oc_lettings_site_profile;
 
+## Drop the old tables : oc_lettings_site_address, oc_lettings_site_letting and oc_lettings_site_profile
+
+- #### sqlite> DROP TABLE oc_lettings_site_address;
+
+- #### sqlite> DROP TABLE oc_lettings_site_letting;
+
+- #### sqlite> DROP TABLE oc_lettings_site_profile;
+
 ## Close oc-lettings-site.sqlite3 database
 
 - #### sqlite> .quit
