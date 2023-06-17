@@ -3,37 +3,76 @@
 
 name: Python application
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+on: push
 
-permissions:
-  contents: read
+env:
+  DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  IMAGE_NAME: ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPO }}:${{ github.sha }}
 
 jobs:
-  build:
 
+  build-app:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.10"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        pytest
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.11'
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Lint with Flake8
+        run: flake8
+      - name: Run Tests
+        run: pytest
+
+  build-image:
+    needs: build-app
+    if: ${{ github.ref == 'refs/heads/main'}}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build docker image
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }} .
+          docker save -o docker-image.tar ${{ env.IMAGE_NAME }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: docker-image-1
+          path: docker-image.tar
+
+  push-image:
+    needs: build-image
+    if: ${{ github.ref == 'refs/heads/main'}}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: docker-image-1
+      - name: Push docker image
+        run: |
+          docker load -i docker-image.tar
+          docker login -u ${{ env.DOCKERHUB_USERNAME }} -p ${{ env.DOCKERHUB_TOKEN }}
+          docker push ${{ env.IMAGE_NAME }}
+
+  deploy-heroku:
+    needs: build-image
+    if: ${{ github.ref == 'refs/heads/main'}}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: docker-image-1
+      - name: Deploy docker image
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_APP_NAME: ${{ vars.HEROKU_APP_NAME }}
+        run: |
+          docker load -i docker-image.tar
+          docker tag ${{ env.IMAGE_NAME }} registry.heroku.com/${{ env.HEROKU_APP_NAME }}/web
+          docker login --username=_ --password=${{ env.HEROKU_API_KEY }} registry.heroku.com
+          docker push registry.heroku.com/${{ env.HEROKU_APP_NAME }}/web
+          heroku container:release web -a ${{ env.HEROKU_APP_NAME }}
