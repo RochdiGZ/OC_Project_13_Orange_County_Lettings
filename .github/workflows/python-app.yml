@@ -74,5 +74,6 @@ jobs:
           docker load -i docker-image.tar
           docker tag ${{ env.IMAGE_NAME }} registry.heroku.com/${{ env.HEROKU_APP_NAME }}/web
           docker login --username=_ --password=${{ env.HEROKU_API_KEY }} registry.heroku.com
+          # heroku container:rochdi.guezguez@gmail.com
           docker push registry.heroku.com/${{ env.HEROKU_APP_NAME }}/web
           heroku container:release web -a ${{ env.HEROKU_APP_NAME }}
