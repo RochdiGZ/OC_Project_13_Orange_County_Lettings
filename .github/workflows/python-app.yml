@@ -41,7 +41,7 @@ jobs:
           docker save -o docker-image.tar ${{ env.IMAGE_NAME }}
       - uses: actions/upload-artifact@v3
         with:
-          name: oc_p13_image
+          name: docker-image-1
           path: docker-image.tar
 
   push-image:
@@ -51,7 +51,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: oc_p13_image
+          name: docker-image-1
       - name: Push docker image
         run: |
           docker load -i docker-image.tar
@@ -65,14 +65,14 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: oc_p13_image
+          name: docker-image-1
       - name: Deploy docker image
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           HEROKU_APP_NAME: ${{ vars.HEROKU_APP_NAME }}
         run: |
           docker load -i docker-image.tar
-          docker tag ${{ env.IMAGE_NAME }} registry.heroku.com/${{ env.HEROKU_APP_NAME }}
-          # docker login --username=_ --password=${{ env.HEROKU_API_KEY }} registry.heroku.com
-          docker push registry.heroku.com/${{ env.HEROKU_APP_NAME }}
+          docker tag ${{ env.IMAGE_NAME }} registry.heroku.com/${{ env.HEROKU_APP_NAME }}/web
+          docker login --username=_ --password=${{ env.HEROKU_API_KEY }} registry.heroku.com
+          docker push registry.heroku.com/${{ env.HEROKU_APP_NAME }}/web
           heroku container:release web -a ${{ env.HEROKU_APP_NAME }}
