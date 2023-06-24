@@ -59,13 +59,9 @@ jobs:
 #           docker push ${{ env.IMAGE_NAME }}
 
   deploy-heroku:
-#     needs: build-image
     if: ${{ github.ref == 'refs/heads/main'}}
     runs-on: ubuntu-latest
     steps:
-#       - uses: actions/download-artifact@v3
-#         with:
-#           name: dockerimage
       - name: Deploy docker image
         env:
           IMAGE_NAME: letting_test
