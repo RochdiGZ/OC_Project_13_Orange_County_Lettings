@@ -63,11 +63,12 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main'}}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: dockerimage
+#       - uses: actions/download-artifact@v3
+#         with:
+#           name: dockerimage
       - name: Deploy docker image
         env:
+          IMAGE_NAME: letting_test
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
           HEROKU_APP_NAME: ${{ vars.HEROKU_APP_NAME }}
         run: |
