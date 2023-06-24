@@ -71,6 +71,6 @@ jobs:
         run: |
           docker build -t ${{ env.IMAGE_NAME }} .
           docker tag ${{ env.IMAGE_NAME }} registry.heroku.com/${{ env.HEROKU_APP_NAME }}/web
-          docker login -u _ -p${{ env.HEROKU_API_KEY }} registry.heroku.com
+          docker login -u _ -p ${{ env.HEROKU_API_KEY }} registry.heroku.com
           docker push registry.heroku.com/${{ env.HEROKU_APP_NAME }}/web
           heroku container:release web -a ${{ env.HEROKU_APP_NAME }}
