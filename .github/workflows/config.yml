@@ -41,7 +41,7 @@ jobs:
            docker save -o docker-image.tar ${{ env.IMAGE_NAME }}
        - uses: actions/upload-artifact@v3
          with:
-           name: dockerimage
+           name: oc_p13_image
            path: docker-image.tar
 
    push-image:
@@ -51,7 +51,7 @@ jobs:
      steps:
        - uses: actions/download-artifact@v3
          with:
-           name: dockerimage
+           name: oc_p13_image
        - name: Push docker image
          run: |
            docker load -i docker-image.tar
