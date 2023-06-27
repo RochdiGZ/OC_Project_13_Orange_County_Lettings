@@ -33,7 +33,8 @@ env.read_env()
 SECRET_KEY = env.str("SECRET_KEY", default="fp$9^593hsriajg$_%=5trot9g!1qa@ew(o-1#@=&4%=hp46(s")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool("DEBUG", default=False)
+DEBUG = True
+# DEBUG = env.bool("DEBUG", default=False)
 
 ALLOWED_HOSTS = [".herokuapp.com", ".localhost", "127.0.0.1"]
 
@@ -131,13 +132,12 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = BASE_DIR + "/staticfiles"
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+"""
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
-
 CSRF_TRUSTED_ORIGINS = ["https://*.herokuapp.com"]
-
+"""
 # SENTRY_DSN = "https://523810d25e8e4682bc84af9811535af1@o4505309249863680.ingest.sentry.io/"
 # SENTRY_DSN += "4505375321751552"
 sentry_sdk.init(
