@@ -75,3 +75,70 @@ Utilisation de PowerShell, comme ci-dessus sauf :
 
 - Pour activer l'environnement virtuel, `.\venv\Scripts\Activate.ps1` 
 - Remplacer `which <my-command>` par `(Get-Command <my-command>).Path`
+
+## Déploiement
+
+Le site web en production est accessible [ici](https://lettings-174e900c72bd.herokuapp.com/)
+
+### Fonctionnement
+
+- Le déploiement est déclenché à chaque mise à jour de la branche `main` sur [GitHub](https://github.com)
+`Le site web est déployé à condition que :`
+- le [linting](https://flake8.pycqa.org/en/latest/)
+- les [tests](https://docs.pytest.org)
+- la construction de l'image [Docker](https://docs.docker.com/) réussissent
+`La mise en oeuvre du pipeline CI/CD repose sur la plateforme :`
+- [GitHub Actions](https://docs.github.com/fr/actions)
+`Le site web de production est hébergé sur la plateforme :`
+- [Heroku](https://devcenter.heroku.com/) permettant d'exécuter une image Docker déjà construite 
+
+`Remarque : A chaque déploiement, une nouvelle image Docker est générée et sauvegardée sur la plateforme :`
+- [Docker Hub](https://hub.docker.com/) pour tag le `hash` du `commit` de Git correspondant
+
+### Configuration requise
+
+- Le code de l'application doit être hébergé sur un dépôt GitHub sur lequel vous avez tous les droits
+- L'accès à un compte [Docker Hub](https://hub.docker.com) pour le dépôt des images Docker
+- L'accès à un compte [Heroku](https://id.heroku.com) pour la mise en production du site web
+- L'accès à un compte [Sentry](https://sentry.io/signup/) pour la surveillance de l'application
+
+### Etapes à suivre
+
+`Préambule : ` Pour créer les secrets et les variables nécessaires à l'exécution du pipeline CI/CD sur GutHub Actions : 
+- Accéder à `settings` de l'onglet Actions GitHub, menu `Security / Secrets and variables / Actions`
+- Accéder à l'onglet `Secrets`
+- Cliquer sur le bouton `New repository secret`
+- Taper le nom `DOCKERHUB_TOKEN`
+- Ajouter la valeur du jeton d'accès à Docker Hub et valider
+- Ajouter chacune des repository variables en accédant à l'onglet `Variables`
+- Cliquer sur le bouton `New repository variable`
+- Taper le nom 
+- Ajouter la valeur de chaque variable et valider
+
+`Depuis le compte DockerHub : `
+  - Créer un `repository` dont le nom doit être enregistré sur GitHub dans la variable nommée `DOCKERHUB_REPO`
+  - Générer un `Access token` (menu `Account Settings / Security`) à enregistrer immédiatement dans un fichier texte.
+    `Access token` correspond à la valeur du secret `DOCKERHUB_TOKEN` à créer depuis GitHub Actions
+    `DOCKERHUB_USERNAME` correspond à votre nom d'utilisateur sur DockerHub 
+`Depuis le compte Heroku : `
+  - Créer une nouvelle application dont le nom doit être enregistrée dans la variable GitHub nommée `HEROKU_APP_NAME`. 
+    Ce nom sera le préfixe de l'URL du site web en production
+`Dans le fichier settings.py de l'application : `
+  - Ajouter `secret key` en créant une `Config var` nommée `SECRET_KEY` ayant pour valeur le résultat de la commande :
+    `python -c "import secrets; print(secrets.token_urlsafe(64))"`
+Vous pouvez regénérer `API KEY` (menu `Account settings` onglet `Account`) comme valeur de la variable `HEROKU_API_KEY`
+- Sur GitHub, créer la variable `HEROKU_EMAIL` ayant pour valeur l'adresse email utilisée pour se connecter à Heroku
+- Après ces étapes de paramétrage, le pipeline CI/CD avec mise en production automatique du site web s'exécutera à chaque nouvelle mise à jour de la branche `main`. Le déroulement et le résultat de l'exécution du `workflow` correspondant est accessible via l'onglet `Actions` du dépôt GitHUb de l'application
+
+- Le site web en production est alors accessible à l'adresse `https://lettings-174e900c72bd.herokuapp.com`
+
+### Surveillance et suivi des erreurs avec [Sentry](https://docs.sentry.io/platforms/python/)
+
+`Depuis le compte Sentry : `
+  - Créer un projet en sélectionnant comme plateforme `DJANGO`
+  - Copier la valeur du champ `DSN` accessible dans la rubrique `SDK SETUP / Client Keys (DSN)` des paramètres du projet nouvellement créé
+- Sur Heroku, Créer une `Config var` nommée `SENTRY_DSN` en lui affectant la valeur du `DSN` ci-dessus
+
+- Tester le bon fonctionnement de la surveillance :
+  - Accéder à l'URL `https://lettings-174e900c72bd.herokuapp.com/sentry-debug` qui génère une exception dans l'app.
+  - Visualiser l'exception levée dans la section `Issues` du compte Sentry
