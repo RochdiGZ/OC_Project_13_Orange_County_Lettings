@@ -52,6 +52,7 @@ jobs:
        - uses: actions/download-artifact@v3
          with:
            name: p13docker
+
        - name: Push docker image
          run: |
            docker load -i docker-image.tar
@@ -59,6 +60,7 @@ jobs:
            docker push ${{ env.IMAGE_NAME }}
 
    deploy-heroku:
+      needs: push-image
       if: ${{ github.ref == 'refs/heads/main'}}
       runs-on: ubuntu-latest
       steps:
